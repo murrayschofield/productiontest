@@ -1,55 +1,752 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="description" content="Arrival Vehicle Tool">
+    <meta name="author" content="Murray Schofield">
+    <title>Battery Production Tool</title>
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
+    <link href="dist/css/sb-admin-2.css" rel="stylesheet">
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="vendor/metisMenu/metisMenu.min.js"></script>
+    <script src="dist/js/sb-admin-2.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
 
-    <title>SB Admin 2 - Bootstrap Admin Theme</title>
 
-    <!-- Bootstrap Core CSS -->
-    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- MetisMenu CSS -->
-    <link href="../vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
-
-    <!-- Custom CSS -->
-    <link href="../dist/css/sb-admin-2.css" rel="stylesheet">
-
-    <!-- Custom Fonts -->
-    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
+	<style>
+	.selectedMenuItem {
+		background-color: rgba(238, 238, 238, 1);
+		<!--style="background-color: rgba(238, 238, 238, 1);"--> 
+	} 
+	.form-control {
+	  height: 100px;
+	  font-size: 60px;
+	  margin-bottom: 50px;
+	  margin-top: 20px;
+	}
+	.btn-lg{
+	  height: 200px; 
+	  font-size: 60px;
+	}
+	.section-text {
+	  font-size: 40px;
+	}
+	.subInstruction-text {
+	  font-size: 20px;
+	}
+	.submission-warning{
+	  font-size: 30px;
+	}
+	.navbar-button{
+		margin-top: 8px;
+	}
+	.picture-text {
+	  font-size: 20px;
+	}
+	.medium-image{
+		height: 400px; 
+		margin-bottom: 20px;
+	}
+	.loader {
+	  border: 16px solid #f3f3f3;
+	  border-radius: 50%;
+	  border-top: 16px solid #3498db;
+	  width: 200px;
+	  height: 200px;
+	  -webkit-animation: spin 2s linear infinite; /* Safari */
+	  animation: spin 2s linear infinite;
+	}
+	@keyframes spin {
+	  0% { transform: rotate(0deg); }
+	  100% { transform: rotate(360deg); }
+	}
+	</style> 
+	 
 </head>
 
+
+<!--
+Functions to add:
+
+Page is refereshing when pull down quickly
+When click not needed, page goes blank
+When click submit, it is going to the local host page
+Baseplate position: notch must be in bottom left as shown in picture + add arrows to picture
+
+
+Long Term
+New nozzle used/existing nozzle used
+some basic data validation checks (not too long, starts with BN etc)
+Handle submission errors e.g. internet drop out
+!-->
+
+
+
 <body>
-
-	Welcome to the website :)
+	<div id="wrapper">	
 	
-	Update 2
 
-    <!-- jQuery -->
-    <script src="../vendor/jquery/jquery.min.js"></script>
+		
+		<!-- Navigation -->
+		<div id="navbar">
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+		
+		
+		
+			<div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+				
+                <a class="navbar-brand" href="batteryproduction.php" id="navBarHeading" >ARRIVAL Battery Production v1.0</a>	
 
-    <!-- Bootstrap Core JavaScript -->
-    <script src="../vendor/bootstrap/js/bootstrap.min.js"></script>
 
-    <!-- Metis Menu Plugin JavaScript -->
-    <script src="../vendor/metisMenu/metisMenu.min.js"></script>
+				
+				
+			</div>
+            <!-- /.navbar-header -->
+	<form class="form-inline my-2 my-lg-0">
+		<button id="submissionWarningButtonHeader" onclick="goToSection('submitForm')" class="btn btn-primary disabled navbar-button" type="button">Ready to Submit</button>
+		<button id="NCRButtonHeader" onclick="goToSection('NCR')" class="btn btn-danger navbar-button" type="button">Enter NCR Number</button>
+	</form>
 
-    <!-- Custom Theme JavaScript -->
-    <script src="../dist/js/sb-admin-2.js"></script>
 
+    <div class="navbar-default sidebar" role="navigation">
+                <div class="sidebar-nav navbar-collapse">
+                    <ul class="nav" id="side-menu">
+					
+						<li><a class="sideMenuItem" id="scanUsername_MenuItem" onclick="goToSection('scanUsername')">User ID<span id="scanUsername_checkBox" class="pull-right glyphicon glyphicon-remove"></a></li> 
+ <li><a class="sideMenuItem" id="scanBaseplate_MenuItem" onclick="goToSection('scanBaseplate')">Scan Baseplate<span id="scanBaseplate_checkBox" class="pull-right glyphicon glyphicon-remove"></a></li> 
+ <li><a class="sideMenuItem" id="scanUpper_MenuItem" onclick="goToSection('scanUpper')">Scan Upper Carrier<span id="scanUpper_checkBox" class="pull-right glyphicon glyphicon-remove"></a></li> 
+ <li><a class="sideMenuItem" id="scanLower_MenuItem" onclick="goToSection('scanLower')">Scan Lower Carrier<span id="scanLower_checkBox" class="pull-right glyphicon glyphicon-remove"></a></li> 
+ <li><a class="sideMenuItem" id="scanLgBox1_MenuItem" onclick="goToSection('scanLgBox1')">Scan LG Box 1<span id="scanLgBox1_checkBox" class="pull-right glyphicon glyphicon-remove"></a></li> 
+ <li><a class="sideMenuItem" id="scanLgBox2_MenuItem" onclick="goToSection('scanLgBox2')">Scan LG Box 2<span id="scanLgBox2_checkBox" class="pull-right glyphicon glyphicon-remove"></a></li> 
+ <li><a class="sideMenuItem" id="scanLgBox3_MenuItem" onclick="goToSection('scanLgBox3')">Scan LG Box 3<span id="scanLgBox3_checkBox" class="pull-right glyphicon glyphicon-remove"></a></li> 
+ <li><a class="sideMenuItem" id="inspectBaseplate_MenuItem" onclick="goToSection('inspectBaseplate')">Inspect Baseplate</a></li> 
+ <li><a class="sideMenuItem" id="cleanBaseplate_MenuItem" onclick="goToSection('cleanBaseplate')">Clean Baseplate</a></li> 
+ <li><a class="sideMenuItem" id="positionBaseplate_MenuItem" onclick="goToSection('positionBaseplate')">Position Baseplate in Robot</a></li> 
+ <li><a class="sideMenuItem" id="checkAdhesive_MenuItem" onclick="goToSection('checkAdhesive')">Check Adhesive Remaining</a></li> 
+ <li><a class="sideMenuItem" id="scanAdhesive_MenuItem" onclick="goToSection('scanAdhesive')">Scan Adhesive Cartridge<span id="scanAdhesive_checkBox" class="pull-right glyphicon glyphicon-remove"></a></li> 
+ <li><a class="sideMenuItem" id="prepareNozzle_MenuItem" onclick="goToSection('prepareNozzle')">Nozzle Replacement/Purge</a></li> 
+ <li><a class="sideMenuItem" id="dispenseAdhesive_MenuItem" onclick="goToSection('dispenseAdhesive')">Run Dispensing Program</a></li> 
+ <li><a class="sideMenuItem" id="inspectAdhesive_MenuItem" onclick="goToSection('inspectAdhesive')">Inspect Adhesive</a></li> 
+ <li><a class="sideMenuItem" id="addBeads_MenuItem" onclick="goToSection('addBeads')">Add glass beads</a></li> 
+ <li><a class="sideMenuItem" id="scanJig_MenuItem" onclick="goToSection('scanJig')">Scan Positioning Jig<span id="scanJig_checkBox" class="pull-right glyphicon glyphicon-remove"></a></li> 
+ <li><a class="sideMenuItem" id="boltJig_MenuItem" onclick="goToSection('boltJig')">Bolt Down Positioning Jig</a></li> 
+ <li><a class="sideMenuItem" id="placeCells_MenuItem" onclick="goToSection('placeCells')">Pick and Place Cells</a></li> 
+ <li><a class="sideMenuItem" id="pressCells_MenuItem" onclick="goToSection('pressCells')">Press Cells Down</a></li> 
+ <li><a class="sideMenuItem" id="scanModuleSerial_MenuItem" onclick="goToSection('scanModuleSerial')">Add Module Serial Number<span id="scanModuleSerial_checkBox" class="pull-right glyphicon glyphicon-remove"></a></li> 
+ <li><a class="sideMenuItem" id="cureModule_MenuItem" onclick="goToSection('cureModule')">Place Module in Cure Room</a></li> 
+ <li><a class="sideMenuItem" id="NCR_MenuItem" onclick="goToSection('NCR')">NCR Input (If Required)</a></li> 
+ 						
+						<li><a class="sideMenuItem" id="submitForm_MenuItem" onclick="goToSection('submitForm')">Submit</a></li>
+
+                    </ul>
+                </div>
+            </div>
+        </nav>
+	</div>
+        <div id="page-wrapper" style="height:1050px">
+			
+						
+			
+			<div class="row formSection" id="scanUsername"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Scan your username:</h1> 
+ 		<p class = "subInstruction-text">This is the barcode with your name above. Ask Tom Brooks for a new one if you do not have one.</p> 
+ <img class="medium-image" src="images/bonding/scanUsername.jpg" >		<input id="scanUsername_dataInput" class="form-control"> 
+ 		<button onclick="goToSection('scanBaseplate','scanUsername')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="scanBaseplate"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Scan baseplate barcode:</h1> 
+ 		<p class = "subInstruction-text">This barcode can be found on the shelf, ask build manager if you cannot find it or out of stock.</p> 
+ <img class="medium-image" src="images/bonding/scanBaseplate.jpg" >		<input id="scanBaseplate_dataInput" class="form-control"> 
+ 		<button onclick="goToSection('scanUpper','scanBaseplate')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="scanUpper"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Scan upper carrier barcode:</h1> 
+ 		<p class = "subInstruction-text">This barcode can be found on the shelf, ask build manager if you cannot find it or out of stock.</p> 
+ <img class="medium-image" src="images/bonding/scanUpper.jpg" >		<input id="scanUpper_dataInput" class="form-control"> 
+ 		<button onclick="goToSection('scanLower','scanUpper')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="scanLower"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Scan lower carrier barcode:</h1> 
+ 		<p class = "subInstruction-text">This barcode can be found on the shelf, ask build manager if you cannot find it or out of stock.</p> 
+ <img class="medium-image" src="images/bonding/scanLower.jpg" >		<input id="scanLower_dataInput" class="form-control"> 
+ 		<button onclick="goToSection('scanLgBox1','scanLower')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="scanLgBox1"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Scan LG Box 1 barcode:</h1> 
+ 		<p class = "subInstruction-text">This barcode can be found on the cell box.</p> 
+ <img class="medium-image" src="images/bonding/scanLgBox.jpg" >		<input id="scanLgBox1_dataInput" class="form-control"> 
+ 		<button onclick="goToSection('scanLgBox2','scanLgBox1')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="scanLgBox2"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Scan LG Box 2 barcode (Must be same grade as box 1):</h1> 
+ 		<p class = "subInstruction-text">This barcode can be found on the cell box.</p> 
+ <img class="medium-image" src="images/bonding/scanLgBox.jpg" >		<input id="scanLgBox2_dataInput" class="form-control"> 
+ 		<button onclick="goToSection('scanLgBox3','scanLgBox2')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="scanLgBox3"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Scan LG Box 3 barcode (Must be same grade as box 1 and 2):</h1> 
+ 		<p class = "subInstruction-text">This barcode can be found on the cell box.</p> 
+ <img class="medium-image" src="images/bonding/scanLgBox.jpg" >		<input id="scanLgBox3_dataInput" class="form-control"> 
+ 		<button onclick="LG_Box3_Special_Action()" class="btn btn-warning btn-lg btn-block">Not Needed</button> 
+ 		<button onclick="goToSection('inspectBaseplate','scanLgBox3')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="inspectBaseplate"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Visually inspect the baseplate.</h1> 
+ 		<p class = "subInstruction-text">Check with manager if issues seen.</p> 
+ <img class="medium-image" src="images/bonding/inspectBaseplate.jpg" >		<button onclick="goToSection('cleanBaseplate','inspectBaseplate')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="cleanBaseplate"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Clean the baseplate with an IPA cloth.</h1> 
+ 		<p class = "subInstruction-text">Wait for IPA to evaporate before proceeding.</p> 
+ <img class="medium-image" src="images/bonding/cleanBaseplate.jpg" >		<button onclick="goToSection('positionBaseplate','cleanBaseplate')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="positionBaseplate"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Position the baseplate on the robot.</h1> 
+ 		<p class = "subInstruction-text">Press fit should be in bottom left.</p> 
+ <img class="medium-image" src="images/bonding/positionBaseplate.jpg" >		<button onclick="goToSection('checkAdhesive','positionBaseplate')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="checkAdhesive"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Check/Change adhesive.</h1> 
+ 		<p class = "subInstruction-text">If there is not enough adhesive to complete the next plate, change to a new cartridge and add a new nozzle.</p> 
+ <img class="medium-image" src="images/bonding/checkAdhesive.jpg" >		<button onclick="goToSection('scanAdhesive','checkAdhesive')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="scanAdhesive"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Scan the adhesive barcode:</h1> 
+ 		<p class = "subInstruction-text">This is on the cartridge.</p> 
+ <img class="medium-image" src="images/bonding/scanAdhesive.jpg" >		<input id="scanAdhesive_dataInput" class="form-control"> 
+ 		<button onclick="goToSection('prepareNozzle','scanAdhesive')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="prepareNozzle"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Ensure nozzle is purged.</h1> 
+ 		<p class = "subInstruction-text">If adhesive has cured in nozzle, replace the nozzle.</p> 
+ <img class="medium-image" src="images/bonding/prepareNozzle.jpg" >		<button onclick="goToSection('dispenseAdhesive','prepareNozzle')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="dispenseAdhesive"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Run dispensing program 3.</h1> 
+ 		<p class = "subInstruction-text"></p> 
+ <img class="medium-image" src="images/bonding/dispenseAdhesive.jpg" >		<button onclick="goToSection('inspectAdhesive','dispenseAdhesive')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="inspectAdhesive"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Visually check program correctly.</h1> 
+ 		<p class = "subInstruction-text">The dispensed line should be clean and the adhesive flowed well.</p> 
+ 		<i class = "picture-text">Image not available. Send one to Murray!</i> 
+ 		<button onclick="goToSection('addBeads','inspectAdhesive')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="addBeads"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Add the glass beads to the adhesive line.</h1> 
+ 		<p class = "subInstruction-text">Sprinkle the beads on. See build manager if not trained to do this.</p> 
+ <img class="medium-image" src="images/bonding/addBeads.jpg" >		<button onclick="goToSection('scanJig','addBeads')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="scanJig"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Scan the positioning jig.</h1> 
+ 		<p class = "subInstruction-text">The barcode can be found on the top of the jig.</p> 
+ <img class="medium-image" src="images/bonding/scanJig.jpg" >		<input id="scanJig_dataInput" class="form-control"> 
+ 		<button onclick="goToSection('boltJig','scanJig')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="boltJig"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Bolt down the positioning jig.</h1> 
+ 		<p class = "subInstruction-text">Use the M6 bolts, electric screwdriver should be set to 9.</p> 
+ 		<i class = "picture-text">Image not available. Send one to Murray!</i> 
+ 		<button onclick="goToSection('placeCells','boltJig')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="placeCells"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Place the cells in to the module, checking for ruse.</h1> 
+ 		<p class = "subInstruction-text">Remove any rusty cells, place these in a box for quarantine.</p> 
+ 		<i class = "picture-text">Image not available. Send one to Murray!</i> 
+ 		<button onclick="goToSection('pressCells','placeCells')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="pressCells"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Press the cells down with presser plate.</h1> 
+ 		<p class = "subInstruction-text">Push down the plate on to the cells firmly.</p> 
+ <img class="medium-image" src="images/bonding/pressCells.jpg" >		<button onclick="goToSection('scanModuleSerial','pressCells')" class="btn btn-success btn-lg btn-block">Done</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="scanModuleSerial"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Add a module serial number and scan it.</h1> 
+ 		<p class = "subInstruction-text">Take the next sticker from the reel and stick to rear face of carriers.</p> 
+ <img class="medium-image" src="images/bonding/scanModuleSerial.jpg" >		<input id="scanModuleSerial_dataInput" class="form-control"> 
+ 		<button onclick="goToSection('cureModule','scanModuleSerial')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="cureModule"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Put module in to curing zone.</h1> 
+ 		<p class = "subInstruction-text">Only click complete, when module has gone in to cure</p> 
+ <img class="medium-image" src="images/bonding/cureModule.jpg" >		<button onclick="Module_Cure_Special_Action()" class="btn btn-success btn-lg btn-block">Module is now curing</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ <div class="row formSection" id="NCR"> 
+   <div class="col-lg-12">		<h1 class = "section-text">Create NCR</h1> 
+ 		<p class = "subInstruction-text">Provide/Scan NCR number if required.</p> 
+ <img class="medium-image" src="images/bonding/NCR.jpg" >		<input id="NCR_dataInput" class="form-control"> 
+ 		<button onclick="goToSection('submitForm','NCR')" class="btn btn-success btn-lg btn-block">Next</button> 
+ 		</br> 
+   </div> 
+ </div> 
+ 						
+			<!-- Special sections for NCR, submit form and upload -->
+	
+			
+			<div class="row formSection" id="submitForm">
+                <div class="col-lg-12">
+                    <h1 class = "section-text"> Submit Form:</h1>
+						<button id="submissionWarningButton" onclick="submitFormClicked()" class="btn btn-primary btn-lg btn-block disabled">Submit</button>
+					</br>
+					<p id="submissionWarning" class="submission-warning"> There is data missing, you must add an NCR number to submit. </p>
+                </div>
+            </div>	
+			
+			<div class="row formSection" id="uploading">
+                <div class="col-lg-12">
+                    <h1 class = "section-text"> Uploading Data Please Wait...</h1>
+					<div class="loader"></div>
+					</br>
+                </div>
+            </div>	
+			
+			
+			<script>
+				//on page load:
+				goToSection( "scanUsername" );
+				var cureTimeButtonPushedString = "Cure button not pushed.";
+				var loadPageTimeD = new Date();
+				var loadPageTimeMillis = loadPageTimeD.getTime();
+				var scanUsername_storedTime = 0;  
+ var scanBaseplate_storedTime = 0;  
+ var scanUpper_storedTime = 0;  
+ var scanLower_storedTime = 0;  
+ var scanLgBox1_storedTime = 0;  
+ var scanLgBox2_storedTime = 0;  
+ var scanLgBox3_storedTime = 0;  
+ var inspectBaseplate_storedTime = 0;  
+ var cleanBaseplate_storedTime = 0;  
+ var positionBaseplate_storedTime = 0;  
+ var checkAdhesive_storedTime = 0;  
+ var scanAdhesive_storedTime = 0;  
+ var prepareNozzle_storedTime = 0;  
+ var dispenseAdhesive_storedTime = 0;  
+ var inspectAdhesive_storedTime = 0;  
+ var addBeads_storedTime = 0;  
+ var scanJig_storedTime = 0;  
+ var boltJig_storedTime = 0;  
+ var placeCells_storedTime = 0;  
+ var pressCells_storedTime = 0;  
+ var scanModuleSerial_storedTime = 0;  
+ var cureModule_storedTime = 0;  
+ var NCR_storedTime = 0;  
+  //declare all stored time variables to be zero initially
+				
+				function getTimeSincePageLoad(){
+					var nowTimeD = new Date();
+					var nowTimeMillis = nowTimeD.getTime();
+					var timeSincePageLoad = nowTimeMillis - loadPageTimeMillis;
+					timeSincePageLoad = (Math.round(timeSincePageLoad/100))/10;
+					return (timeSincePageLoad);
+					
+				}
+				
+				function LG_Box3_Special_Action(){
+					document.getElementById('scanLgBox3_dataInput').value = "NOT REQUIRED";
+					goToSection( "inspectBaseplate , scanLgBox3" );
+
+				}
+				
+				function Module_Cure_Special_Action(){
+					var cureTimeButtonPushed = new Date();
+					cureTimeButtonPushedString = cureTimeButtonPushed.toString();
+					cureTimeButtonPushedString = cureTimeButtonPushedString.substring(0, cureTimeButtonPushedString.length - 31);
+					console.log(cureTimeButtonPushedString);
+					goToSection( "submitForm" , "cureModule" );
+				}
+				
+				function goToSection( sectionName , sectionID ){
+					//Update ticks and crosses then hide all sections
+					checkInputData();
+					hideAllSections();
+					
+					//Add current username to top screen
+					document.getElementById("navBarHeading").innerHTML = "ARRIVAL Battery Production Tool - BONDING STATION - USER: " +  document.getElementById("scanUsername_dataInput").value;
+					
+					// Colour the current menu item a darker shade of grey and reset all others
+					var x = document.getElementsByClassName("sideMenuItem");
+					var i; for (i = 0; i < x.length; i++) {
+					  x[i].style.backgroundColor  = "";
+					}
+					document.getElementById(sectionName + "_MenuItem").style.backgroundColor = 'Gainsboro ';
+					
+					//Make the chosen section visible
+					document.getElementById(sectionName).style.visibility = 'visible';
+					document.getElementById(sectionName).className = "row formSection collapse.show ";
+					
+					//Update the focus when moving section
+					if(sectionName == "scanUsername"){ 
+ 		document.getElementById("scanUsername_dataInput").focus(); 
+ 		setScanTimeTrack = "scanUsername";
+		setScanDestination = "scanBaseplate"; 
+} 
+if(sectionName == "scanBaseplate"){ 
+ 		document.getElementById("scanBaseplate_dataInput").focus(); 
+ 		setScanTimeTrack = "scanBaseplate";
+		setScanDestination = "scanUpper"; 
+} 
+if(sectionName == "scanUpper"){ 
+ 		document.getElementById("scanUpper_dataInput").focus(); 
+ 		setScanTimeTrack = "scanUpper";
+		setScanDestination = "scanLower"; 
+} 
+if(sectionName == "scanLower"){ 
+ 		document.getElementById("scanLower_dataInput").focus(); 
+ 		setScanTimeTrack = "scanLower";
+		setScanDestination = "scanLgBox1"; 
+} 
+if(sectionName == "scanLgBox1"){ 
+ 		document.getElementById("scanLgBox1_dataInput").focus(); 
+ 		setScanTimeTrack = "scanLgBox1";
+		setScanDestination = "scanLgBox2"; 
+} 
+if(sectionName == "scanLgBox2"){ 
+ 		document.getElementById("scanLgBox2_dataInput").focus(); 
+ 		setScanTimeTrack = "scanLgBox2";
+		setScanDestination = "scanLgBox3"; 
+} 
+if(sectionName == "scanLgBox3"){ 
+ 		document.getElementById("scanLgBox3_dataInput").focus(); 
+ 		setScanTimeTrack = "scanLgBox3";
+		setScanDestination = "inspectBaseplate"; 
+} 
+if(sectionName == "scanAdhesive"){ 
+ 		document.getElementById("scanAdhesive_dataInput").focus(); 
+ 		setScanTimeTrack = "scanAdhesive";
+		setScanDestination = "prepareNozzle"; 
+} 
+if(sectionName == "scanJig"){ 
+ 		document.getElementById("scanJig_dataInput").focus(); 
+ 		setScanTimeTrack = "scanJig";
+		setScanDestination = "boltJig"; 
+} 
+if(sectionName == "scanModuleSerial"){ 
+ 		document.getElementById("scanModuleSerial_dataInput").focus(); 
+ 		setScanTimeTrack = "scanModuleSerial";
+		setScanDestination = "cureModule"; 
+} 
+if(sectionName == "NCR"){ 
+ 		document.getElementById("NCR_dataInput").focus(); 
+ 		setScanTimeTrack = "NCR";
+		setScanDestination = "submitForm"; 
+} 
+					if(sectionID ==  "scanUsername" ){ 
+  scanUsername_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "scanBaseplate" ){ 
+  scanBaseplate_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "scanUpper" ){ 
+  scanUpper_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "scanLower" ){ 
+  scanLower_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "scanLgBox1" ){ 
+  scanLgBox1_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "scanLgBox2" ){ 
+  scanLgBox2_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "scanLgBox3" ){ 
+  scanLgBox3_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "inspectBaseplate" ){ 
+  inspectBaseplate_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "cleanBaseplate" ){ 
+  cleanBaseplate_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "positionBaseplate" ){ 
+  positionBaseplate_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "checkAdhesive" ){ 
+  checkAdhesive_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "scanAdhesive" ){ 
+  scanAdhesive_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "prepareNozzle" ){ 
+  prepareNozzle_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "dispenseAdhesive" ){ 
+  dispenseAdhesive_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "inspectAdhesive" ){ 
+  inspectAdhesive_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "addBeads" ){ 
+  addBeads_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "scanJig" ){ 
+  scanJig_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "boltJig" ){ 
+  boltJig_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "placeCells" ){ 
+  placeCells_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "pressCells" ){ 
+  pressCells_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "scanModuleSerial" ){ 
+  scanModuleSerial_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "cureModule" ){ 
+  cureModule_storedTime = getTimeSincePageLoad(); 
+} 
+if(sectionID ==  "NCR" ){ 
+  NCR_storedTime = getTimeSincePageLoad(); 
+} 
+					
+				}
+				
+
+				
+				function checkInputData(){
+					// check each field and add a tick if filled and cross if not filled
+					allDataCollected = true;
+					scanDataCheck( "scanUsername_dataInput" , "scanUsername_checkBox"); 
+ scanDataCheck( "scanBaseplate_dataInput" , "scanBaseplate_checkBox"); 
+ scanDataCheck( "scanUpper_dataInput" , "scanUpper_checkBox"); 
+ scanDataCheck( "scanLower_dataInput" , "scanLower_checkBox"); 
+ scanDataCheck( "scanLgBox1_dataInput" , "scanLgBox1_checkBox"); 
+ scanDataCheck( "scanLgBox2_dataInput" , "scanLgBox2_checkBox"); 
+ scanDataCheck( "scanLgBox3_dataInput" , "scanLgBox3_checkBox"); 
+ scanDataCheck( "scanAdhesive_dataInput" , "scanAdhesive_checkBox"); 
+ scanDataCheck( "scanJig_dataInput" , "scanJig_checkBox"); 
+ scanDataCheck( "scanModuleSerial_dataInput" , "scanModuleSerial_checkBox"); 
+ 					if(document.getElementById("NCR_dataInput").value != ""){
+						document.getElementById("submissionWarningButtonHeader").className = "btn btn-primary navbar-button";
+						document.getElementById("submissionWarningButton").className = "btn btn-danger btn-lg btn-block";
+						document.getElementById("submissionWarningButton").innerHTML = "Submit With NCR Number";
+						document.getElementById("submissionWarning").innerHTML = " ";
+					}
+					else if(allDataCollected == true){
+						document.getElementById("submissionWarningButtonHeader").className = "btn btn-primary navbar-button";
+						document.getElementById("submissionWarningButton").className = "btn btn-primary btn-lg btn-block";
+						document.getElementById("submissionWarningButton").innerHTML = "Submit!";
+						document.getElementById("submissionWarning").innerHTML = "";
+					}
+					else{
+						document.getElementById("submissionWarningButtonHeader").className = "btn btn-primary disabled navbar-button";
+						document.getElementById("submissionWarningButton").className = "btn btn-primary btn-lg btn-block disabled";
+						document.getElementById("submissionWarningButton").innerHTML = "Submit Not Possible";
+						document.getElementById("submissionWarning").innerHTML = " There is data missing, you must complete all data or add an NCR number to be able to submit.";
+					}
+					
+				}
+				
+				
+				//Function used on each section to add a tick or cross
+				function scanDataCheck( dataInput , checkbox){
+					if (document.getElementById(dataInput).value == ""){
+						document.getElementById(checkbox).className = "pull-right glyphicon glyphicon-remove ";
+						allDataCollected = false;
+					}
+					else{
+						document.getElementById(checkbox).className = "pull-right glyphicon glyphicon-ok";
+					}
+				}
+				
+				function hideAllSections(){
+					//collapse and hide any sections with the class "formSection"
+					var x = document.getElementsByClassName("formSection");
+					var i;
+					for (i = 0; i < x.length; i++) {
+					  x[i].style.visibility = 'hidden';
+					  x[i].className = "row formSection collapse ";
+					}
+				}
+				
+				function submitFormClicked(){
+					checkInputData();
+					if (allDataCollected == true || document.getElementById("NCR_dataInput").value != ""){
+						hideAllSections();
+						document.getElementById("uploading").style.visibility = 'visible';
+						document.getElementById("uploading").className = "row formSection collapse.show ";
+						sendDataToSheets();
+					}
+					else{
+						//Not all data collected, show pop up and run NCR mechanism
+					}
+					
+				}
+				
+				function getVal(dataInput){
+					//console.log(dataInput);
+					return (document.getElementById(dataInput).value);
+				}
+				
+				function sendDataToSheets(){
+					//Collect the relevant data
+					
+					var NCR_Required = "No";
+					if(document.getElementById("NCR_dataInput").value != ""){
+						NCR_Required = "Yes";
+					}
+					var submitTimeMillis = getTimeSincePageLoad();
+					var submissionTimeStamp = new Date();
+					submissionTimeStampString = submissionTimeStamp.toString();
+					submissionTimeStampString = submissionTimeStampString.substring(0, submissionTimeStampString.length - 31);
+					
+					//Adds single row to spreadsheet
+					var url = "https://sheetsu.com/apis/v1.0bu/02d5fd34fb1c";
+					var params = { 
+					Timestamp: submissionTimeStampString,
+					Operator:  	getVal( "scanUsername_dataInput" ), 
+					Baseplate_Batch_Number: 	getVal( "scanBaseplate_dataInput" ), 
+					Upper_Cell_Carrier_Batch_Number:getVal( "scanUpper_dataInput" ), 
+					Lower_Cell_Carrier_Batch_Number:getVal( "scanLower_dataInput" ),
+					LG_Cells_Box_1_Batch_Number:	getVal( "scanLgBox1_dataInput" ),
+					LG_Cells_Box_2_Batch_Number:	getVal( "scanLgBox2_dataInput" ),
+					LG_Cells_Box_3_Batch_Number:	getVal( "scanLgBox3_dataInput" ),
+					EA9497_Batch_Number:	getVal( "scanAdhesive_dataInput" ),
+					Positioning_Jig_Number:	getVal( "scanJig_dataInput" ),
+					Module_Cure_Time: cureTimeButtonPushedString,
+					Module_Serial_Number:	getVal( "scanModuleSerial_dataInput" ),
+					NCR_Submitted:	NCR_Required ,
+					NCR_Number: 	getVal( "NCR_dataInput" ),
+					
+					scanUsername_Time: scanUsername_storedTime,  
+scanBaseplate_Time: scanBaseplate_storedTime,  
+scanUpper_Time: scanUpper_storedTime,  
+scanLower_Time: scanLower_storedTime,  
+scanLgBox1_Time: scanLgBox1_storedTime,  
+scanLgBox2_Time: scanLgBox2_storedTime,  
+scanLgBox3_Time: scanLgBox3_storedTime,  
+inspectBaseplate_Time: inspectBaseplate_storedTime,  
+cleanBaseplate_Time: cleanBaseplate_storedTime,  
+positionBaseplate_Time: positionBaseplate_storedTime,  
+checkAdhesive_Time: checkAdhesive_storedTime,  
+scanAdhesive_Time: scanAdhesive_storedTime,  
+prepareNozzle_Time: prepareNozzle_storedTime,  
+dispenseAdhesive_Time: dispenseAdhesive_storedTime,  
+inspectAdhesive_Time: inspectAdhesive_storedTime,  
+addBeads_Time: addBeads_storedTime,  
+scanJig_Time: scanJig_storedTime,  
+boltJig_Time: boltJig_storedTime,  
+placeCells_Time: placeCells_storedTime,  
+pressCells_Time: pressCells_storedTime,  
+scanModuleSerial_Time: scanModuleSerial_storedTime,  
+cureModule_Time: cureModule_storedTime,  
+NCR_Time: NCR_storedTime,  
+					submission_Time: submitTimeMillis
+					
+					};
+					$.ajax({ type: "POST", url: url, data: params, success: successFunc });
+				}
+				
+				</script>
+							<script>
+
+				function successFunc(data) {
+					console.log(data);
+					//window.location.replace("http://arbnx64vsvr-14/");
+					window.location.replace("http://localhost/sites/");
+				}
+				
+				// Action to take when barcode scan detected
+				function doScanAction(){
+					var delayInMilliseconds = 500; //delay after scan before moving on
+					setTimeout(function() {
+					  goToSection( setScanDestination , setScanTimeTrack );
+					}, delayInMilliseconds);
+				}
+				
+				//Barcode scanner recognition
+				(function($) {
+					console.log("Initialising barcode scanner");
+					var _timeoutHandler = 0,
+						_inputString = '',
+						_onKeypress = function(e) {
+							if (_timeoutHandler) {
+								clearTimeout(_timeoutHandler);
+							}
+							_inputString += e.key;
+
+							_timeoutHandler = setTimeout(function () {
+								if (_inputString.length <= 3) {
+									_inputString = '';
+									return;
+								}
+								$(e.target).trigger('altdeviceinput', _inputString);
+								_inputString = '';
+								//console.log("Scan Complete");
+								doScanAction();
+							}, 200);
+						};
+					$(document).on({
+						keypress: _onKeypress
+					});
+				})($)
+				
+				
+			</script>					
+			
+		</div>
+    </div>
+
+   
 </body>
+
 
 </html>
